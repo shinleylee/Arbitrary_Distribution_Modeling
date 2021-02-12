@@ -12,6 +12,47 @@ import horovod.tensorflow.keras as hvd
 from deepctr.layers.interaction import InteractingLayer
 
 
+embedding_paras = [
+    # embedding column name, distinct value count, embedding dimensionality
+    # request
+    ("server_id", 800, 9),
+    ("video_group_id", 20, 4),
+    ("site_group_id", 30, 5),
+    ("distributor_group_id", 20, 4),
+    ("time_position_class", 5, 2),
+    ("slot_environment", 5, 2),
+    # user
+    ("user_address_desensitized", 12000, 13),
+    ("user_timezone", 120, 7),
+    ("user_country_id", 120, 7),
+    ("user_state_id", 400, 8),
+    ("user_dma_code", 500, 9),
+    ("user_platform_os_id", 12, 3),
+    ("user_device_type", 10, 3),
+    # advertisement (42)
+    ("candidate__brand_id", 2000, 11),
+    ("candidate__network_id", 16, 4),
+    ("candidate__ad_id", 250, 8),
+    ("candidate__advertiser_id", 1200, 10),
+    ("candidate__duration", 60, 6)
+]
+numerical_paras = [
+    # request
+    'slot_width_normalized', 
+    'slot_height_normalized', 
+    'slot_min_duration_normalized', 
+    'slot_max_ad_duration_normalized', 
+    # context
+    'utc_hour_normalized', 
+    'local_hour_normalized', 
+    'month_normalized', 
+    'day_of_month_normalized', 
+    'day_of_week_normalized', 
+    'day_of_year_normalized', 
+    'week_of_year_normalized'
+]
+
+
 def neighborhood_likelihood_loss(y_true, y_pred):
     # y_true = (label, bidding_price, winning_price
     # y_pred = (price_step)
@@ -141,7 +182,7 @@ def neighborhood_likelihood_loss(y_true, y_pred):
     return alpha * loss_1 + (1 - alpha) * loss_2
 
 
-def get_nll_model(learning_rate, l2_reg, price_min, price_max, price_interval):
+def get_adm_model(learning_rate, l2_reg, price_min, price_max, price_interval, embedd_size):
     price_step = int(math.floor((price_max - price_min + K.epsilon()) / price_interval))
     
     total_len = 0
@@ -151,13 +192,13 @@ def get_nll_model(learning_rate, l2_reg, price_min, price_max, price_interval):
     embedding_tensors = []
     # composing embedding layers
     for column_name, count_value, dimension_length in embedding_paras:
-        total_len += dimension_length
+        total_len += embedd_size  # or dimension_length
         input_tensor = Input(name='{}_index'.format(column_name), 
                              shape=(1,), 
                              dtype='int64')
         embedding_tensor = Embedding(
             count_value,
-            dimension_length,
+            embedd_size,  # or dimension_length
             input_length=1,
             embeddings_initializer='glorot_normal',
             name='{}_embedding'.format(column_name)
@@ -176,6 +217,8 @@ def get_nll_model(learning_rate, l2_reg, price_min, price_max, price_interval):
                              dtype='float32')
         numerical_tensors.append(input_tensor)
         input_tensors.append(input_tensor)
+        input_embedd_tensor = Lambda(lambda x: tf.tile(x, [1, embedd_size]))(input_tensor)
+        numerical_embedd_tensors.append(input_embedd_tensor)
     
     feature_num = len(input_tensors)  # 44
     
