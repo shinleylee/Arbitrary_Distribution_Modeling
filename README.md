@@ -7,3 +7,5 @@ This repo implements the *Neighborhood Likelihood Loss* (**NLL**) and *Arbitrary
 *ipinyou_example.ipynb* shows an executable project to perform experiments on iPinYou dataset.
 
 *yoyi_example.ipynb* shows an executable project to perform experiments on YOYI dataset.
+
+This is a version of implementation where the breadth of neighbourhood is equal to one time of the difference between the bidding price and the winning price. That is r<sup>r</sup><sub>win</sub> = r<sup>l</sup><sub>win</sub> = 1.
