@@ -108,8 +108,8 @@ def neighborhood_likelihood_loss(y_true, y_pred):
     mask_win_b_cdf = tf.boolean_mask(mask_b_cdf, mask_win)  # (None_win, price_step)
     mask_win_b_pdf = tf.boolean_mask(mask_b_pdf, mask_win)  # (None_win, price_step)
     ## on Losing bids
-    mask_lose_b_cdf = tf.boolean_mask(mask_z_cdf, mask_lose)  # (None_lose, price_step)
-    mask_lose_b_pdf = tf.boolean_mask(mask_z_pdf, mask_lose)  # (None_lose, price_step)
+    mask_lose_b_cdf = tf.boolean_mask(mask_b_cdf, mask_lose)  # (None_lose, price_step)
+    mask_lose_b_pdf = tf.boolean_mask(mask_b_pdf, mask_lose)  # (None_lose, price_step)
     
     # Price Distribution
     y_pred_win = tf.boolean_mask(y_pred, mask_win)  # (None_win, price_step)
